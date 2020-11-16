@@ -5,7 +5,7 @@ from app.requests.enrolment_authorisation_request import EnrolmentAuthorisationR
 from app.responses import ResponseFailure, ResponseSuccess, SuccessType
 
 
-class PostEnrolmentAuthorisationRequest(BaseModel):
+class EnrolmentAuthorisation(BaseModel):
     enrolment_repo: EnrolmentRepo
 
     class Config:

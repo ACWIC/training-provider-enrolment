@@ -14,6 +14,8 @@ def test_enrolment_authorisation_init():
         student_id=test_data.sample_student_id,
         course_id=test_data.sample_course_id,
         status=test_data.sample_status,
+        enrolment_id=test_data.sample_enrolment_id,
+        shared_secret=test_data.sample_shared_secret,
         created=test_data.sample_created,
     )
 
@@ -22,3 +24,5 @@ def test_enrolment_authorisation_init():
     assert enrolment_auth.course_id == test_data.sample_course_id
     assert enrolment_auth.status == test_data.sample_status
     assert enrolment_auth.created == test_data.sample_created
+    assert enrolment_auth.enrolment_id == test_data.sample_enrolment_id
+    assert enrolment_auth.shared_secret == test_data.sample_shared_secret

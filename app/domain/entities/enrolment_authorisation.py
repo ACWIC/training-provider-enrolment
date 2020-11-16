@@ -13,4 +13,6 @@ class EnrolmentAuthorisation(BaseModel):
     student_id: str
     course_id: str
     status: EnrolmentStatus = EnrolmentStatus.lodged
+    enrolment_id: str
+    shared_secret: str
     created: datetime

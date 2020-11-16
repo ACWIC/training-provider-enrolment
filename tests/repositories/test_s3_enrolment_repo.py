@@ -45,6 +45,8 @@ def test_create_enrolment_authorisation(boto_client, get_uuid):
     assert enrolment_auth.student_id == test_data.sample_student_id
     assert enrolment_auth.course_id == test_data.sample_course_id
     assert enrolment_auth.status == test_data.sample_status
+    assert enrolment_auth.shared_secret == test_data.sample_shared_secret
+    assert enrolment_auth.enrolment_id == test_data.sample_enrolment_id
 
     boto_client.return_value.put_object.assert_called_once_with(
         Body=bytes(enrolment_auth.json(), "utf-8"),
