@@ -1,4 +1,4 @@
-import uuid
+import datetime
 from typing import Any
 
 import boto3
@@ -6,6 +6,8 @@ import boto3
 from app.config import settings
 from app.domain.entities.enrolment_authorisation import EnrolmentAuthorisation
 from app.repositories.enrolment_repo import EnrolmentRepo
+from app.utils.error_handling import handle_s3_errors
+from app.utils.random import Random
 
 
 class S3EnrolmentRepo(EnrolmentRepo):
@@ -13,19 +15,39 @@ class S3EnrolmentRepo(EnrolmentRepo):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.s3 = boto3.client("s3", **settings.s3_configuration)
+        with handle_s3_errors():
+            self.s3 = boto3.client("s3", **settings.s3_configuration)
 
-    def save_enrolment(self, course_id, student_id):
-        # Create a submission uuid
-        enrolment = EnrolmentAuthorisation(
-            uuid=uuid.uuid4(), course_id=course_id, student_id=student_id
-        )
+    def create_enrolment_authorisation(self, enrolment_authorisation: dict):
+        enrolment_authorisation["enrolment_auth_id"] = Random.get_uuid()
+        enrolment_authorisation["created"] = datetime.datetime.now()
+        enrolment_authorisation = EnrolmentAuthorisation(**enrolment_authorisation)
+        with handle_s3_errors():
+            self.s3.put_object(
+                Body=bytes(enrolment_authorisation.json(), "utf-8"),
+                Key="enrolment_authorisations/"
+                + enrolment_authorisation.enrolment_auth_id
+                + ".json",
+                Bucket=settings.ENROLMENT_AUTHORISATION_BUCKET,
+            )
+        return enrolment_authorisation
 
-        # Write directory to bucket
-        self.s3.put_object(
-            Body=bytes(enrolment.json(), "utf-8"),
-            Key=f"{enrolment.uuid}.json",
-            Bucket=settings.ENROLMENT_AUTHORISATION_BUCKET,
-        )
+    def student_exists(self, student_id: str) -> bool:
+        try:
+            self.s3.get_object(
+                Key=f"students/{student_id}.json",
+                Bucket=settings.STUDENT_BUCKET,
+            )
+            return True
+        except Exception:
+            return False
 
-        return enrolment
+    def course_exists(self, course_id: str) -> bool:
+        try:
+            self.s3.get_object(
+                Key=f"courses/{course_id}.json",
+                Bucket=settings.COURSE_BUCKET,
+            )
+            return True
+        except Exception:
+            return False

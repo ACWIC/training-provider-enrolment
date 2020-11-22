@@ -1,30 +1,21 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.repositories.s3_enrolment_repo import S3EnrolmentRepo
-from app.requests.enrolment_requests import NewEnrolmentRequest
-from app.use_cases.create_new_enrolment import CreateNewEnrolment
+from app.requests.enrolment_authorisation_request import EnrolmentAuthorisationRequest
+from app.use_cases.post_enrolment_authorisation import EnrolmentAuthorisation
 
 router = APIRouter()
+enrolment_repo = S3EnrolmentRepo()
 
 
-@router.get("/enrolments/{enrolment_id}")
-def enrolments(enrolment_id: str):
-    """Getting an enrollment by ID will return the current
-    state of the enrollment, derived from the enrollment’s journal.
+@router.post("/enrolment")
+def post_enrolment_request(inputs: EnrolmentAuthorisationRequest):
     """
-    return {"your_enrolment_id": enrolment_id}
-
-
-@router.post("/enrolments")
-def create_enrolment(inputs: NewEnrolmentRequest):
-    """Posting an enrollment authorisation is a synchronous proccess that
-    immediately succeeds (or fails) to create an enrollment authorisation,
-    and assign it a unique enrollment authorisation id.
-
-    The initial state of the enrollment authorisation is “lodged”.
+    Authenticated and Authorised employers use this API
+    to POST an enrolment authorisation to the training provider.
     """
-    enrolment_repo = S3EnrolmentRepo()
-    use_case = CreateNewEnrolment(enrolment_repo=enrolment_repo)
+    use_case = EnrolmentAuthorisation(enrolment_repo=enrolment_repo)
     response = use_case.execute(inputs)
-
+    if bool(response) is False:
+        raise HTTPException(status_code=response.type.value, detail=response.message)
     return response
