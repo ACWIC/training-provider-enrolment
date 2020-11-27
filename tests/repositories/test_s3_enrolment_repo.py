@@ -66,7 +66,7 @@ def test_student_exists_true():
         get_object_response(test_data.sample_enrolment_auth),
         {
             "Bucket": settings.STUDENT_BUCKET,
-            "Key": f"students/{test_data.sample_student_id}.json"
+            "Key": f"students/{test_data.sample_student_id}.json",
         },
     )
     with stubber:
@@ -92,7 +92,7 @@ def test_course_exists_true():
         get_object_response(test_data.sample_enrolment_auth),
         {
             "Bucket": settings.COURSE_BUCKET,
-            "Key": f"courses/{test_data.sample_course_id}.json"
+            "Key": f"courses/{test_data.sample_course_id}.json",
         },
     )
     with stubber:
