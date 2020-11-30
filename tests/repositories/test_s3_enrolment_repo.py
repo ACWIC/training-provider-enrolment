@@ -8,8 +8,11 @@ of the appropriate type.
 import datetime
 from unittest import mock
 
+from botocore.stub import Stubber
+
 from app.config import settings
 from app.repositories.s3_enrolment_repo import S3EnrolmentRepo
+from tests.test_data.boto_client_responses import get_object_response
 from tests.test_data.data_provider import DataProvider
 
 test_data = DataProvider()
@@ -53,6 +56,58 @@ def test_create_enrolment_authorisation(boto_client, get_uuid):
         Key=f"enrolment_authorisations/{test_data.sample_enrolment_auth_id}.json",
         Bucket="some-bucket",
     )
+
+
+def test_student_exists_true():
+    repo = S3EnrolmentRepo()
+    stubber = Stubber(repo.s3)
+    stubber.add_response(
+        "get_object",
+        get_object_response(test_data.sample_enrolment_auth),
+        {
+            "Bucket": settings.STUDENT_BUCKET,
+            "Key": f"students/{test_data.sample_student_id}.json",
+        },
+    )
+    with stubber:
+        assert repo.student_exists(test_data.sample_student_id) is True
+
+
+def test_student_exists_false():
+    repo = S3EnrolmentRepo()
+    stubber = Stubber(repo.s3)
+    stubber.add_client_error(
+        "get_object",
+        "NoSuchBucket",
+    )
+    with stubber:
+        assert not repo.student_exists(test_data.sample_student_id_2)
+
+
+def test_course_exists_true():
+    repo = S3EnrolmentRepo()
+    stubber = Stubber(repo.s3)
+    stubber.add_response(
+        "get_object",
+        get_object_response(test_data.sample_enrolment_auth),
+        {
+            "Bucket": settings.COURSE_BUCKET,
+            "Key": f"courses/{test_data.sample_course_id}.json",
+        },
+    )
+    with stubber:
+        assert repo.course_exists(test_data.sample_course_id) is True
+
+
+def test_course_exists_false():
+    repo = S3EnrolmentRepo()
+    stubber = Stubber(repo.s3)
+    stubber.add_client_error(
+        "get_object",
+        "NoSuchBucket",
+    )
+    with stubber:
+        assert repo.course_exists(test_data.sample_course_id_2) is False
 
 
 def mock_datetime_now(target, datetime_module):
